@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html>
+
+    <style>
+        
+        h1 {
+            color: brown;
+        }
+
+        h2, h3, h4 {
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        }
+
+    </style>
+
+    <head>
+        <title> RPN Converter</title>
+    </head>
+
+    <body>
+
+        <h1>Reverse Polish Notation Converter</h1>
+
+        
+
+        
+
+        <p> Enter a math formula in infix notation.  The calculator will convert it into Reverse Polish Notation and
+            then evaluate the formula.  Surround negative numbers with parentheses, e.g. (-3.5).
+        </p>
+        <form>
+            <input type="text" id="infixFormula">
+        </form>
+        <br>
+        <button type = 'button' onclick="goButtonClicked()">
+            Go!
+        </button>
+
+
+        
+
+        <script>
+            class Stack{
+
+                constructor(){
+                    this.items = [];
+                }
+
+                push(element){
+                    this.items.push(element);
+                }
+
+                pop(){
+                    if (this.items.length == "0"){
+                        return underflow;
+                    }
+                    return this.items.pop();
+                }
+
+                peek(){
+                    return this.items[this.items.length - 1];
+                }
+
+                isEmpty(){
+                    return this.items.length == 0;
+                }
+            }
+
+
+            function goButtonClicked(){
+                
+                var input = document.getElementById("infixFormula").value;
+
+                //removes all spaces in input string. necessary or else parsing will fail.
+                input = input.replaceAll(' ', '');
+                tokens = parse(input);
+                var rpnTokens = shunt(tokens);
+
+                //begin displaying output to HTML page
+                var rpnFormula = "";
+                for (var i = 0; i < rpnTokens.length; i++){
+                    rpnFormula += rpnTokens[i] + " ";
+                }
+                document.getElementById("rpnOutput").innerHTML = rpnFormula;
+
+                var solution = calclulate(rpnTokens);
+
+                document.getElementById("solutionOutput").innerHTML = solution;
+                
+            }
+
+            function parse(expression){ //parses a given Math expression in infix notation into individual tokens
+
+                var tokens = [];
+                var numberBuilder = "";
+
+                for (var i = 0; i < expression.length; i++){
+                    var givenChar = expression.substring(i, i+1);
+                    if (isNumeric(givenChar) || givenChar == "."){ //if given character is a numeric operand OR a decimal point
+                        numberBuilder += givenChar;
+                    }
+                    else if (givenChar == "-" && isLeftParen(expression.substring(i-1, i))){
+                        numberBuilder += givenChar;
+                    }
+                    else if (isLeftParen(givenChar)){
+                        
+                        if (numberBuilder.length > 0){
+                            tokens.push(numberBuilder);
+                            numberBuilder = "";
+                        }
+
+                        if (prevCharExists(tokens)){
+                            var prevChar = tokens.get(tokens.length - 1);
+                            if (isNumeric(prevChar) || isRightParen(prevChar)){
+                                tokens.push("*");
+                            }
+                        }
+                        tokens.push(givenChar);
+                    }
+                    else if (isRightParen(givenChar)){
+                        if (numberBuilder.length > 0){
+                            tokens.push(numberBuilder);
+                            numberBuilder = "";
+                        }
+                        tokens.push(givenChar);
+
+                        //determines if there is a character after this one.
+                        if (!expression.endsWith(givenChar)){
+                            var nextChar = expression.substring(i+1, i+2)
+                            if (isNumeric(nextChar) || isLeftParen(nextChar)){
+                                tokens.push("*");
+                            }
+                        }
+
+
+                        /*
+                        if (nextCharExists(expression, i)){
+                            var nextChar = expression.substring(i+1, i+2)
+                            if (isNumeric(nextChar) || isLeftParen(nextChar)){
+                                tokens.push("*");
+                            }
+                        }*/
+                    }
+                    else if (isOperator(givenChar) || isLeftParen(givenChar) || isRightParen(givenChar)){
+                        if (numberBuilder.length > 0){
+                            tokens.push(numberBuilder);
+                            numberBuilder = "";
+                        }
+                        tokens.push(givenChar);
+                    }
+                }
+
+                if (numberBuilder != ""){
+                    tokens.push(numberBuilder);
+                }
+                
+                return tokens;
+            }
+
+            function prevCharExists(tokens){
+                var prevCharExists = true;
+                try{
+                    var prevChar = tokens.get(tokens.length - 1);
+                }
+                catch(error){
+                    prevCharExists = false;
+                }
+                return prevCharExists;
+            }
+
+            function nextCharExists(expression, i){
+
+                var nextCharExists = true;
+                try{
+                    var nextChar = expression.charAt(i+1);
+                    //var nextChar = expression.substring(i+1, i+2);
+                }
+                catch(error){
+                    nextCharExists = false;
+                }
+                return nextCharExists;
+            }
+
+            //implementation of shunting yard algorithm
+            function shunt(tokens){
+
+                stack = new Stack();
+                var output = [];
+
+                for (let i = 0; i < tokens.length; i++){
+                    var token = tokens[i];
+                    
+                    if (isOperator(token)){
+                        while(!stack.isEmpty() && precedenceLevel(token) <= precedenceLevel(stack.peek())){
+                            if (precedenceLevel(token) > precedenceLevel(stack.peek())){
+                                stack.push(token);
+                            }
+                            else{
+                                output.push(stack.pop());
+                            }
+                        }
+                        stack.push(token);
+                    }
+                    else if (isLeftParen(token)){
+                        stack.push(token);
+                    }
+                    else if (isRightParen(token)){ //not working for some reason.
+                        while (!isLeftParen(stack.peek())){
+                            output.push(stack.pop());
+                        }
+                        stack.pop();
+                    }
+                    else if (isNumeric(token)){
+                        output.push(token);
+                    }
+                }
+
+                while (!stack.isEmpty()){ //add !stack.isEmpty() condition here
+                    output.push(stack.pop());
+                }
+
+                return output;
+                
+            }
+
+            function isOperator(token){
+                var operators = ["+", "-", "/", "*", "^"];
+                return operators.includes(token);
+
+            }
+
+            function isNumeric(token){
+                return !isNaN(token);
+            }
+
+            function isLeftParen(token){
+                return token == "(";
+            }
+
+            function isRightParen(token){
+                return token == ")";
+            }
+
+            function precedenceLevel(operator){
+                switch(operator){
+                    case "+":
+                    case "-":
+                        return 0;
+                    case "*":
+                    case "/":
+                        return 1;
+                    case "^":
+                        return 2;
+                }
+            }
+
+            //takes tokens in RPN notation as input, calculates result
+            function calclulate(tokens){
+                var x, y;
+                stack = new Stack();
+
+                for (var i = 0; i <  tokens.length; i++){
+                    var token = tokens[i];
+                    if (isNumeric(token)){
+                        stack.push(token);
+                    }
+                    else{
+                        y = parseFloat(stack.pop());
+                        x = parseFloat(stack.pop());
+                        switch(token){
+                            case "+":
+                                stack.push(x + y);
+                                break;
+                            case "-":
+                                stack.push(x - y);
+                                break;
+                            case "*":
+                                stack.push(x * y);
+                                break;
+                            case "/":
+                                stack.push(x / y);
+                            break;
+                            case "^":
+                                stack.push(Math.pow(x, y));
+                        }
+                    }
+                }
+                return stack.pop();
+            }
+
+        </script>
+        <br><br>
+        <label>
+            Formula in Reverse Polish Notation:
+        </label>
+        <label id = 'rpnOutput'>
+
+        </label>
+        <br>
+        <br>
+
+        <label>
+            Solution:
+        </label>
+        <label id = 'solutionOutput'>
+        </label>
+        <br>
+        <br>
+
+        <h2>
+            How to type
+        </h4>
+        <p>
+            Surround negative numbers in parentheses, e.g. (-3.2). Ensure that parentheses are matched.
+        </p>
+
+        <h3>
+            About RPN
+        </h1>
+        <p>
+
+        </p>
+        <p>
+            Infix notation is the standard notation used in Mathematics.  However, because infix notation isn't
+            read from left-to-right (due to the order of operations) but rather requires you to read back-and-forth,
+            it is extremely difficult for a computer to interpret it.  
+            
+            Reverse Polish Notation (RPN) is a notation schema where operators follow their operands, which is much
+            easier for a computer to understand.  Infix notation is converted to RPN using the shunting yard algorithm,
+            which is what this website does.
+        </p>
+
+
+        <style>
+            .radio{
+                display: inline-flex;
+                overflow: hidden;
+                border-radius: 15px;
+                box-shadow: 0 0 5px rgba(0, 0, 0, 0.25);
+            }
+
+            .radio__input{
+                display: none;
+            }
+
+            .radio__label{
+                padding: 8px 14px;
+                font-size: 14px;
+                font-family: sans-serif;
+                color: aqua;
+                background-color: white;
+                cursor: pointer;
+                
+            }
+
+            .radio__label:not(:last-of-type){
+                border-right: 2px solid gray;
+            }
+
+            .radio__input:checked + .radio__label{
+                background: gray;
+            }
+        </style>
+
+        <input class="radio__input" type="radio" value="option1" name="myRadio" id = "myRadio1">
+        <label class = "radio__label" for="myRadio1">
+            Light
+        </label>
+        
+        <input class="radio__input" type="radio" value="option2" name="myRadio" id = "myRadio2">
+        <label class = "radio__label" for="myRadio2">
+            Dark
+        </label>
+
+        <input class="radio__input" type="radio" value="option3" name="myRadio" id = "myRadio3">
+        <label class = "radio__label" for="myRadio3">
+            Device Theme
+        </label>
+
+    </body>
+</html>
