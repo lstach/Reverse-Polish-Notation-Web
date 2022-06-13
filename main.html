@@ -4,11 +4,20 @@
     <style>
         
         h1 {
-            color: brown;
+            font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            font-weight: 300;
         }
 
         h2, h3, h4 {
             font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        }
+
+        p{
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        label{
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
         }
 
     </style>
@@ -314,9 +323,11 @@
             Surround negative numbers in parentheses, e.g. (-3.2). Ensure that parentheses are matched.
         </p>
 
+        <br>
+    
         <h3>
             About RPN
-        </h1>
+        </h3>
         <p>
 
         </p>
@@ -324,13 +335,13 @@
             Infix notation is the standard notation used in Mathematics.  However, because infix notation isn't
             read from left-to-right (due to the order of operations) but rather requires you to read back-and-forth,
             it is extremely difficult for a computer to interpret it.  
-            
+            <br><br>
             Reverse Polish Notation (RPN) is a notation schema where operators follow their operands, which is much
             easier for a computer to understand.  Infix notation is converted to RPN using the shunting yard algorithm,
-            which is what this website does.
+            which this website implements using JavaScript.
         </p>
 
-
+        <!--
         <style>
             .radio{
                 display: inline-flex;
@@ -375,7 +386,7 @@
         <input class="radio__input" type="radio" value="option3" name="myRadio" id = "myRadio3">
         <label class = "radio__label" for="myRadio3">
             Device Theme
-        </label>
+        </label>-->
 
     </body>
 </html>
